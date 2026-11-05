@@ -5,10 +5,21 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerMovement : MonoBehaviour
 {
+    [Header("Velocidad")]
     public float walkSpeed = 5f;
     public float runSpeed = 9f;
+
+    // Mejora de velocidad al recoger migas
+    public float speedIncreasePerCrumb = 0.5f;
+    public float maxSpeed = 15f;
+
+    // Velocidad actual del personaje
+    public float currentSpeed;
+
+    [Header("Salto")]
     public float jumpForce = 6f;
 
+    [Header("Camara")]
     public float mouseSensitivity = 0.15f;
     public float cameraDistance = 5f;
     public float cameraHeight = 1.5f;
@@ -32,6 +43,9 @@ public class PlayerMovement : MonoBehaviour
 
         rb.constraints = RigidbodyConstraints.FreezeRotation;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
+
+        // La velocidad inicial es la velocidad de caminar
+        currentSpeed = walkSpeed;
 
         if (playerCamera != null)
             cameraYaw = playerCamera.transform.eulerAngles.y;
@@ -74,7 +88,9 @@ public class PlayerMovement : MonoBehaviour
             cameraPitch -= mouseDelta.y * mouseSensitivity;
 
             cameraPitch = Mathf.Clamp(
-                cameraPitch, minCameraAngle, maxCameraAngle
+                cameraPitch,
+                minCameraAngle,
+                maxCameraAngle
             );
         }
 
@@ -96,11 +112,19 @@ public class PlayerMovement : MonoBehaviour
             Keyboard.current.rightArrowKey.isPressed)
             movementInput.x += 1;
 
-        movementInput = Vector2.ClampMagnitude(movementInput, 1f);
+        movementInput = Vector2.ClampMagnitude(
+            movementInput,
+            1f
+        );
 
-        if (Keyboard.current.spaceKey.wasPressedThisFrame && isGrounded)
+        if (Keyboard.current.spaceKey.wasPressedThisFrame &&
+            isGrounded)
         {
-            rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
+            rb.AddForce(
+                Vector3.up * jumpForce,
+                ForceMode.Impulse
+            );
+
             isGrounded = false;
         }
     }
@@ -110,23 +134,29 @@ public class PlayerMovement : MonoBehaviour
         Quaternion cameraRotation =
             Quaternion.Euler(0f, cameraYaw, 0f);
 
-        Vector3 forward = cameraRotation * Vector3.forward;
-        Vector3 right = cameraRotation * Vector3.right;
+        Vector3 forward =
+            cameraRotation * Vector3.forward;
+
+        Vector3 right =
+            cameraRotation * Vector3.right;
 
         Vector3 direction =
             forward * movementInput.y +
             right * movementInput.x;
 
-        float currentSpeed = walkSpeed;
+        // Velocidad base actual
+        float movementSpeed = currentSpeed;
 
+        // Shift permite correr
         if (Keyboard.current != null &&
             (Keyboard.current.leftShiftKey.isPressed ||
              Keyboard.current.rightShiftKey.isPressed))
         {
-            currentSpeed = runSpeed;
+            movementSpeed = currentSpeed * (runSpeed / walkSpeed);
         }
 
-        Vector3 velocity = direction * currentSpeed;
+        Vector3 velocity =
+            direction * movementSpeed;
 
         rb.linearVelocity = new Vector3(
             velocity.x,
@@ -134,16 +164,22 @@ public class PlayerMovement : MonoBehaviour
             velocity.z
         );
 
-        if (rotateWithCamera && direction.sqrMagnitude > 0.01f)
+        if (rotateWithCamera &&
+            direction.sqrMagnitude > 0.01f)
         {
             Quaternion targetRotation =
-                Quaternion.LookRotation(direction, Vector3.up);
+                Quaternion.LookRotation(
+                    direction,
+                    Vector3.up
+                );
 
-            rb.MoveRotation(Quaternion.Slerp(
-                rb.rotation,
-                targetRotation,
-                rotationSpeed * Time.fixedDeltaTime
-            ));
+            rb.MoveRotation(
+                Quaternion.Slerp(
+                    rb.rotation,
+                    targetRotation,
+                    rotationSpeed * Time.fixedDeltaTime
+                )
+            );
         }
 
         Vector3 rayOrigin =
@@ -162,16 +198,42 @@ public class PlayerMovement : MonoBehaviour
         if (playerCamera == null)
             return;
 
-        Vector3 target = transform.position +
-                         Vector3.up * cameraHeight;
+        Vector3 target =
+            transform.position +
+            Vector3.up * cameraHeight;
 
         Quaternion rotation =
-            Quaternion.Euler(cameraPitch, cameraYaw, 0f);
+            Quaternion.Euler(
+                cameraPitch,
+                cameraYaw,
+                0f
+            );
 
         Vector3 offset =
-            rotation * new Vector3(0f, 0f, -cameraDistance);
+            rotation *
+            new Vector3(
+                0f,
+                0f,
+                -cameraDistance
+            );
 
-        playerCamera.transform.position = target + offset;
+        playerCamera.transform.position =
+            target + offset;
+
         playerCamera.transform.LookAt(target);
+    }
+
+    // Esta funcion aumenta la velocidad al recoger una miga
+    public void IncreaseSpeed()
+    {
+        currentSpeed += speedIncreasePerCrumb;
+
+        // No permite superar la velocidad maxima
+        currentSpeed = Mathf.Min(
+            currentSpeed,
+            maxSpeed
+        );
+
+        Debug.Log("Velocidad actual: " + currentSpeed);
     }
 }

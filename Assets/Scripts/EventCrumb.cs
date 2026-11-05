@@ -1,7 +1,7 @@
-using Unity.VisualScripting;
+
 using UnityEngine;
 
-public class Migaja : MonoBehaviour
+public class EventCrumb : MonoBehaviour
 {
     private bool hormigaCerca = false;
 
@@ -26,6 +26,18 @@ public class Migaja : MonoBehaviour
         if (hormigaCerca && Input.GetKeyDown(KeyCode.E))
         {
             Debug.Log("¡Has recogido una migaja!");
+
+            // Buscar al jugador
+            PlayerMovement player =
+                FindFirstObjectByType<PlayerMovement>();
+
+            // Aumentar la velocidad del jugador
+            if (player != null)
+            {
+                player.IncreaseSpeed();
+            }
+
+            // Destruir la migaja recogida
             Destroy(gameObject);
         }
     }
@@ -35,7 +47,12 @@ public class Migaja : MonoBehaviour
         if (hormigaCerca)
         {
             GUI.Label(
-                new Rect(Screen.width / 2 - 70, Screen.height - 100, 200, 30),
+                new Rect(
+                    Screen.width / 2 - 70,
+                    Screen.height - 100,
+                    200,
+                    30
+                ),
                 "E para recoger"
             );
         }
