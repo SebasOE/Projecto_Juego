@@ -36,9 +36,6 @@ public class PlayerMovement : MonoBehaviour
     private bool isGrounded;
     private bool rotateWithCamera = false;
 
-    //Alvaro
-    public Animator animadorHormiga;
-
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -130,14 +127,6 @@ public class PlayerMovement : MonoBehaviour
 
             isGrounded = false;
         }
-
-        //Alvaro
-        float moverX = Input.GetAxis("Horizontal");
-        float moverZ = Input.GetAxis("Vertical");
-        
-        bool seMueve = moverX != 0 || moverZ != 0;
-
-        animadorHormiga.SetBool("Walking", seMueve);
     }
 
     void FixedUpdate()
